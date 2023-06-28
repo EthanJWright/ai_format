@@ -43,6 +43,13 @@ cargo run --release -- <open_ai_key> <filename> <prompt>
 
 Make sure to replace `<open_ai_key>`, `<filename>`, and `<prompt>` with the appropriate values.
 
+### Usage Ideas
+
+1. Use `pdftotext` to convert a PDF to a text file, then use this to format it
+   as HTML to import into your D&D game!
+2. Copy/paste a blog from somewhere, ask it to be formatted as markdown for use
+   in Obsidian
+
 ## Examples
 
 Here are some examples of how to use AI Format:
