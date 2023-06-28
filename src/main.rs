@@ -4,7 +4,7 @@ use std::io::{BufRead, BufReader};
 
 mod ai;
 
-const CHUNK_SIZE: usize = 1024 * 10;
+const CHUNK_SIZE: usize = 20000;
 const CHUNK_BATCH_SIZE: usize = 5;
 
 fn percent_left(current_chunk: &str, chunk_size: usize) -> usize {
@@ -72,6 +72,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         is_previous_line_empty = line.trim().is_empty();
     }
+
+
+    println!("processing {} chunks", chunks.len());
 
     // Push the last chunk into the array if it's not empty
     if !current_chunk.is_empty() {
