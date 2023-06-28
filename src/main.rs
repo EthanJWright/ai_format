@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read the command line arguments
     let args: Vec<String> = env::args().collect();
     if args.len() != 4 {
-        eprintln!("Usage: cargo run -- <open ai key> <filename> <prompt>");
+        eprintln!("Usage: ai_format <open ai key> <filename> <prompt>");
         return Ok(());
     }
 
@@ -102,6 +102,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         batched_chunks.remove(0);
     }
+
+    println!("{}", results.join("\n"));
 
     Ok(())
 }
