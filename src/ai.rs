@@ -1,10 +1,10 @@
 use chatgpt::prelude::*;
-use chatgpt::Result as ChatResult;
+use chatgpt::Result as ChatGptResult;
 use chatgpt::types::CompletionResponse;
-use tokio::task::{spawn};
+use futures::future::{try_join_all, TryFutureExt};
+use tokio::task::spawn;
 
-
-pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatResult<Vec<CompletionResponse>> {
+pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatGptResult<Vec<CompletionResponse>> {
     let config = ModelConfigurationBuilder::default()
         .engine(ChatGPTEngine::Gpt35Turbo)
         .build()
@@ -21,21 +21,21 @@ pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatResult<Vec<Co
         spawn(async move { handle_chunk(client, chunk).await })
     });
 
+    let responses: Vec<ChatGptResult<CompletionResponse>> = try_join_all(tasks)
+        .map_ok(|results| {
+            results.into_iter().collect::<Vec<_>>()
+        })
+        .await.unwrap();
 
-    let mut responses = Vec::new();
-    for task in tasks {
-        let result = task.await.unwrap().unwrap();
-        println!("Adding response");
-        responses.push(result);
-    }
-
+    let unwrapped_responses: Vec<CompletionResponse> = responses.into_iter().map(|res| res.unwrap()).collect();
 
     println!("Done processing chunks");
-    Ok(responses)
+    Ok(unwrapped_responses)
 }
 
-async fn handle_chunk(client: ChatGPT, chunk: String) -> ChatResult<CompletionResponse> {
+async fn handle_chunk(client: ChatGPT, chunk: String) -> ChatGptResult<CompletionResponse> {
     let message = format!("format as HTML\n\n{}", chunk);
     let response: CompletionResponse = client.send_message(&message).await?;
     Ok(response)
 }
+
