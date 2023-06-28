@@ -1,7 +1,8 @@
 use chatgpt::prelude::*;
-use chatgpt::Result as ChatResult; // Import the Result type with a different name
+use chatgpt::Result as ChatResult;
 use chatgpt::types::CompletionResponse;
-use futures::future::{try_join_all};
+use tokio::task::{spawn};
+
 
 pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatResult<Vec<CompletionResponse>> {
     let config = ModelConfigurationBuilder::default()
@@ -14,7 +15,22 @@ pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatResult<Vec<Co
         Err(err) => panic!("Failed to create ChatGPT client: {}", err),
     };
 
-    let responses = try_join_all(chunks.into_iter().map(|chunk| handle_chunk(client.clone(), chunk))).await?;
+    let tasks = chunks.into_iter().map(|chunk| {
+        println!("Processing chunk...");
+        let client = client.clone();
+        spawn(async move { handle_chunk(client, chunk).await })
+    });
+
+
+    let mut responses = Vec::new();
+    for task in tasks {
+        let result = task.await.unwrap().unwrap();
+        println!("Adding response");
+        responses.push(result);
+    }
+
+
+    println!("Done processing chunks");
     Ok(responses)
 }
 
@@ -23,5 +39,3 @@ async fn handle_chunk(client: ChatGPT, chunk: String) -> ChatResult<CompletionRe
     let response: CompletionResponse = client.send_message(&message).await?;
     Ok(response)
 }
-
-
