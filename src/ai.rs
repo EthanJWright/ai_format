@@ -16,7 +16,6 @@ pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatGptResult<Vec
     };
 
     let tasks = chunks.into_iter().map(|chunk| {
-        println!("Processing chunk...");
         let client = client.clone();
         spawn(async move { handle_chunk(client, chunk).await })
     });
