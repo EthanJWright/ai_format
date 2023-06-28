@@ -5,6 +5,7 @@ use std::io::{BufRead, BufReader};
 mod ai;
 
 const CHUNK_SIZE: usize = 1024 * 5;
+const CHUNK_BATCH_SIZE: usize = 5;
 
 fn percent_left(current_chunk: &str, chunk_size: usize) -> usize {
     let remaining_size = chunk_size - current_chunk.len();
@@ -76,7 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // split chunks into a nested array of 5 chunk batches
-    let mut batched_chunks: Vec<Vec<String>> = chunks.chunks(5).map(|chunk| chunk.to_vec()).collect();
+    let mut batched_chunks: Vec<Vec<String>> = chunks.chunks(CHUNK_BATCH_SIZE).map(|chunk| chunk.to_vec()).collect();
 
     let mut results: Vec<String> = Vec::new();
 
