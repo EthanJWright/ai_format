@@ -27,14 +27,24 @@ pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatGptResult<Vec
         })
         .await.unwrap();
 
-    let unwrapped_responses: Vec<CompletionResponse> = responses.into_iter().map(|res| res.unwrap()).collect();
+    // change above to a reduce, where errors are dropped
+    let mut unwrapped_responses: Vec<CompletionResponse> = Vec::new();
+    for res in responses {
+        match res {
+            Ok(response) => {
+                unwrapped_responses.push(response);
+            },
+            Err(err) => {
+                println!("Error: {}", err);
+            }
+        }
+    }
 
-    println!("Done processing chunks");
     Ok(unwrapped_responses)
 }
 
 async fn handle_chunk(client: ChatGPT, chunk: String) -> ChatGptResult<CompletionResponse> {
-    let message = format!("format as HTML\n\n{}", chunk);
+    let message = format!("format as HTML, remove anything that seems like garbage or artifacts\n\n{}", chunk);
     let response: CompletionResponse = client.send_message(&message).await?;
     Ok(response)
 }

@@ -4,7 +4,7 @@ use std::io::{BufRead, BufReader};
 
 mod ai;
 
-const CHUNK_SIZE: usize = 1024 * 5;
+const CHUNK_SIZE: usize = 1024 * 10;
 const CHUNK_BATCH_SIZE: usize = 5;
 
 fn percent_left(current_chunk: &str, chunk_size: usize) -> usize {
@@ -91,9 +91,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         batched_chunks.remove(0);
     }
-
-    println!("{}", results.join("\n"));
-
 
     Ok(())
 }
