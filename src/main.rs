@@ -16,21 +16,23 @@ fn percent_left(current_chunk: &str, chunk_size: usize) -> usize {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read the command line arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
-        eprintln!("Usage: cargo run -- <open ai key> <filename>");
-        return Ok(())
+    if args.len() != 4 {
+        eprintln!("Usage: cargo run -- <open ai key> <filename> <prompt>");
+        return Ok(());
     }
 
-    // Open the file
     let key = &args[1];
 
+    // Open the file
     let file = match File::open(&args[2]) {
         Ok(file) => file,
         Err(error) => {
             eprintln!("Failed to open file: {}", error);
-            return Ok(())
+            return Ok(());
         }
     };
+
+    let prompt = &args[3];
 
     // Read the file line by line
     let reader = BufReader::new(file);
@@ -77,13 +79,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // split chunks into a nested array of 5 chunk batches
-    let mut batched_chunks: Vec<Vec<String>> = chunks.chunks(CHUNK_BATCH_SIZE).map(|chunk| chunk.to_vec()).collect();
+    let mut batched_chunks: Vec<Vec<String>> = chunks
+        .chunks(CHUNK_BATCH_SIZE)
+        .map(|chunk| chunk.to_vec())
+        .collect();
 
     let mut results: Vec<String> = Vec::new();
 
+
     // Send each chunk in batched_chunks to the AI in sequence
     while let Some(chunk) = batched_chunks.first() {
-        let result = ai::process_chunks(&key, chunk.to_vec()).await?;
+        let result = ai::process_chunks(
+            &key,
+            prompt.clone(),
+            chunk.to_vec(),
+        )
+        .await?;
 
         for (_index, result) in result.iter().enumerate() {
             results.push(result.message().content.clone());

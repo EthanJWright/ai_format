@@ -1,10 +1,9 @@
-use chatgpt::prelude::*;
-use chatgpt::Result as ChatGptResult;
+use chatgpt::prelude::*; use chatgpt::Result as ChatGptResult;
 use chatgpt::types::CompletionResponse;
 use futures::future::{try_join_all, TryFutureExt};
 use tokio::task::spawn;
 
-pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatGptResult<Vec<CompletionResponse>> {
+pub async fn process_chunks(key: &str, prompt: String, chunks: Vec<String>) -> ChatGptResult<Vec<CompletionResponse>> {
     let config = ModelConfigurationBuilder::default()
         .engine(ChatGPTEngine::Gpt35Turbo)
         .build()
@@ -17,7 +16,8 @@ pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatGptResult<Vec
 
     let tasks = chunks.into_iter().map(|chunk| {
         let client = client.clone();
-        spawn(async move { handle_chunk(client, chunk).await })
+        let prompt = prompt.clone();
+        spawn(async move { handle_chunk(client, chunk, prompt).await })
     });
 
     let responses: Vec<ChatGptResult<CompletionResponse>> = try_join_all(tasks)
@@ -42,8 +42,8 @@ pub async fn process_chunks(key: &str, chunks: Vec<String>) -> ChatGptResult<Vec
     Ok(unwrapped_responses)
 }
 
-async fn handle_chunk(client: ChatGPT, chunk: String) -> ChatGptResult<CompletionResponse> {
-    let message = format!("format as HTML, remove anything that seems like garbage or artifacts\n\n{}", chunk);
+async fn handle_chunk(client: ChatGPT, chunk: String, prompt: String) -> ChatGptResult<CompletionResponse> {
+    let message = format!("{}\n\n{}", prompt, chunk);
     let response: CompletionResponse = client.send_message(&message).await?;
     Ok(response)
 }
