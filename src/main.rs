@@ -74,8 +74,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
 
-    println!("processing {} chunks", chunks.len());
-
     // Push the last chunk into the array if it's not empty
     if !current_chunk.is_empty() {
         chunks.push(current_chunk);
